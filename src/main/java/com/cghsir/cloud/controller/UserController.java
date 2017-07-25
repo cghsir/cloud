@@ -1,4 +1,4 @@
-package com.cghsir.cloud;
+package com.cghsir.cloud.controller;
 
 import com.cghsir.cloud.mapper.UsersMapper;
 import com.cghsir.cloud.model.Users;
