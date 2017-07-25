@@ -3,6 +3,7 @@ package com.cghsir.cloud;
 import com.cghsir.cloud.mapper.UsersMapper;
 import com.cghsir.cloud.model.Users;
 import com.cghsir.cloud.model.UsersExample;
+import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,6 +43,7 @@ public class UserController {
         UsersExample.Criteria c2 = example.createCriteria();
         c2.andPasswordLike("%b%");
         example.or(c2);
+        PageHelper.startPage(1, 10);
         return usersMapper.selectByExample(example);
     }
 }

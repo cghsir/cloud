@@ -21,6 +21,6 @@ public class UserMapperTest {
     @Test
     public void testFindUserById(){
         Users user = userMapper.selectByPrimaryKey("d3f37606-b73c-4cbb-b736-414dd95089b1");
-        System.out.println(user);
+        System.out.println(user.toString());
     }
 }
