@@ -1,8 +1,10 @@
 package com.cghsir.cloud.config;
 
-import com.cghsir.cloud.mapper.UsersMapper;
-import com.cghsir.cloud.model.Users;
-import com.cghsir.cloud.model.UsersExample;
+import com.cghsir.cloud.mapper.UserMapper;
+import com.cghsir.cloud.model.User;
+import com.cghsir.cloud.model.UserExample;
+import com.cghsir.cloud.service.UserRoleService;
+import com.cghsir.cloud.service.UserService;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
@@ -22,7 +24,10 @@ public class MyShiroRealm extends AuthorizingRealm {
     private static final Logger _LOG = LoggerFactory.getLogger(MyShiroRealm.class);
 
     @Autowired
-    private UsersMapper usersMapper;
+    private UserService userService;
+
+    @Autowired
+    private UserRoleService userRoleService;
 
     /**
      * 权限认证，为当前登录的Subject授予角色和权限
@@ -37,11 +42,15 @@ public class MyShiroRealm extends AuthorizingRealm {
         //获取当前登录输入的用户名，等价于(String) principalCollection.fromRealm(getName()).iterator().next();
         String loginName = (String) super.getAvailablePrincipal(principalCollection);
         //到数据库查是否有此对象
-        Users user = usersMapper.selectByPrimaryKey(loginName);// 实际项目中，这里可以根据实际情况做缓存，如果不做，Shiro自己也是有时间间隔机制，2分钟内不会重复执行该方法
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andUsernameEqualTo(loginName);
+        User user = userService.selectOneByExample(userExample);// 实际项目中，这里可以根据实际情况做缓存，如果不做，Shiro自己也是有时间间隔机制，2分钟内不会重复执行该方法
         if (user != null) {
             //权限信息对象info,用来存放查出的用户的所有的角色（role）及权限（permission）
             SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
             //用户的角色集合
+            info.setRoles(userRoleService.selectRolesStrByUser(user));
+
             //info.setRoles(user.getRolesName());
             //用户的角色对应的所有权限，如果只使用角色定义访问权限，下面的四行可以不要
             //List<Role> roleList = user.getRoleList();
@@ -76,16 +85,15 @@ public class MyShiroRealm extends AuthorizingRealm {
         //UsernamePasswordToken对象用来存放提交的登录信息
         UsernamePasswordToken token = (UsernamePasswordToken) authenticationToken;
 
-        //_LOG.info("验证当前Subject时获取到token为：" + ReflectionToStringBuilder.toString(token, ToStringStyle.MULTI_LINE_STYLE));
-
         //查出是否有此用户
-        //Users user = usersMapper.selectByPrimaryKey(token.getUsername());
-        UsersExample usersExample = new UsersExample();
-        usersExample.createCriteria().andNameEqualTo(token.getUsername());
-        List<Users> users = usersMapper.selectByExample(usersExample);
-        if (users != null && users.size() >= 0) {
+        UserExample UserExample = new UserExample();
+        UserExample.createCriteria().andUsernameEqualTo(token.getUsername());
+        User user = userService.selectOneByExample(UserExample);
+
+        if (user != null) {
             // 若存在，将此用户存放到登录认证info中，无需自己做密码对比，Shiro会为我们进行密码对比校验
-            return new SimpleAuthenticationInfo(users.get(0).getId(), users.get(0).getPassword(), getName());
+            // TODO 密码撒盐
+            return new SimpleAuthenticationInfo(user.getId(), user.getPassword(), getName());
         }
         return null;
     }
