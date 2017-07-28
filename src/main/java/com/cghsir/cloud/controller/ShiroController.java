@@ -36,9 +36,7 @@ public class ShiroController {
     private UserMapper UserMapper;
 
     @RequestMapping(value="/login",method= RequestMethod.GET)
-    public String loginForm(Model model){
-        model.addAttribute("user", new User());
-        System.out.println("........................");
+    public String loginForm(){
         return "login";
     }
 
