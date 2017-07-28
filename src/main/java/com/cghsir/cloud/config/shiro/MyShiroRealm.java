@@ -90,7 +90,7 @@ public class MyShiroRealm extends AuthorizingRealm {
         if (user != null) {
             // 若存在，将此用户存放到登录认证info中，无需自己做密码对比，Shiro会为我们进行密码对比校验
             // TODO 密码撒盐
-            return new SimpleAuthenticationInfo(user.getId(), user.getPassword(), getName());
+            return new SimpleAuthenticationInfo(user.getUsername(), user.getPassword(), getName());
         }
         return null;
     }

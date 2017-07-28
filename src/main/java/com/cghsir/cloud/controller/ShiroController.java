@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -32,16 +33,20 @@ public class ShiroController {
 
     private static final Logger logger = LoggerFactory.getLogger(ShiroController.class);
 
+    private static final String BASE_PATH = "/admin";
+
     @Autowired
     private UserMapper UserMapper;
 
     @RequestMapping(value="/login",method= RequestMethod.GET)
-    public String loginForm(){
+    public String loginForm(Model model, HttpServletRequest request){
+        //model.addAttribute("msg", "消息测试");
+        //request.setAttribute("msg", "消息测试");
         return "login";
     }
 
     @RequestMapping(value="/login",method=RequestMethod.POST)
-    public String login(@Valid User user, BindingResult bindingResult, RedirectAttributes redirectAttributes){
+    public String login(@Valid User user, BindingResult bindingResult, RedirectAttributes redirectAttributes,Model model,HttpServletRequest request){
         if(bindingResult.hasErrors()){
             return "login";
         }
@@ -78,17 +83,26 @@ public class ShiroController {
         //验证是否登录成功
         if(currenUser.isAuthenticated()){
             logger.info("用户[" + username + "]登录认证通过(这里可以进行一些认证通过后的一些系统参数初始化操作)");
-            return "redirect:/user";
+            return ""+BASE_PATH+"/index";
         }else{
             token.clear();
-            return "redirect:/login";
+            model.addAttribute("error", true);
+            request.setAttribute("msg","登录失败!");
+            return "/login";
         }
+    }
+
+    @RequestMapping("/"+BASE_PATH+"/index")
+    public String index(){
+        return BASE_PATH+"/index";
     }
 
     @RequestMapping(value="/logout",method=RequestMethod.GET)
     public String logout(RedirectAttributes redirectAttributes ){
+        Subject subject = SecurityUtils.getSubject();
         //使用权限管理工具进行用户的退出，跳出登录，给出提示信息
-        SecurityUtils.getSubject().logout();
+        logger.info("用户["+subject.getPrincipal()+"]退出系统");
+        subject.logout();
         redirectAttributes.addFlashAttribute("message", "您已安全退出");
         return "redirect:/login";
     }
